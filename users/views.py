@@ -72,8 +72,8 @@ def profiles(request):
     return render(request, 'users/profiles.html', context)
 
 
-def userProfile(request, pk):
-    profile = Profile.objects.get(id=pk)
+def userProfile(request, id):
+    profile = Profile.objects.get(id=id)
 
     main_skills = profile.skills.all()[:2]
     extra_skills = profile.skills.all()[2:]
