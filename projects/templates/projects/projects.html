@@ -11,7 +11,7 @@
             <div class="hero-section__search">
                 <form id='searchForm' class="form" action="{% url 'projects' %}" method="get">
                     <div class="form__field">
-                        <label for="formInput#search">Поиск по всем проектам </label>
+                        <label for="formInput#search">Поиск по проектам </label>
                         <input class="input input--text" id="formInput#search" type="text" name="search_query"
                             placeholder="Поиск по названию/описанию проекта" value="{{ search_query }}" />
                     </div>
@@ -29,17 +29,17 @@
                 <div class="column">
                     <div class="card project">
                         <a href="{% url 'project' project.id %}" class="project">
-                            <img class="project__thumbnail" src="{{ project.imageURL }}" alt="project thumbnail" />
+                            <img class="project__thumbnail" src="{{ project.image.url }}" alt="скриншот проекта" />
                             <div class="card__body">
                                 <h3 class="project__title">{{ project.title }}</h3>
-                                <p><a class="project__author" href="#">Разработчик:
+                                <p><a class="project__author" href="{% url 'user-profile' project.owner %}">Разработчик:
                                         {{ project.owner.name }}</a>
                                 </p>
                                 <p class="project--rating">
-                                    <span style="font-weight: bold;">положительных отзывов!!:</span>  {{ project.votes_ratio }}%
+                                    <span style="font-weight: bold;">положительных отзывов:</span>  {{ project.votes_ratio }}%
                                 </p>
                                  <p class="project--rating">
-                                    <span style="font-weight: bold;">всего отзывов!!:</span> {{ project.total_votes }}
+                                    <span style="font-weight: bold;">всего отзывов:</span> {{ project.total_votes }}
                                 </p>                               
                                 <div class="project__tags">
                                     {% for tag in project.tags.all %}
