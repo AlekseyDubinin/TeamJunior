@@ -62,7 +62,7 @@ class ProjectCreateView(CreateView):
 
 class ProjectUpdateView(UpdateView):
     model = Project
-    template_name = 'projects/project_form_update.html'
+    template_name = 'projects/project_form.html'
     form_class = ProjectForm
     success_url = reverse_lazy('projects')
 
