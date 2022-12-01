@@ -111,5 +111,3 @@ def projects_by_tag(request, tag_slug):
 
     return render(request, "projects/projects.html", context)
 
-
-# Пытаюсь подключиться
