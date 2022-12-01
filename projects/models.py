@@ -3,6 +3,7 @@ from django.db import models
 from users.models import Profile
 from django.utils.text import slugify
 
+
 class Tag(models.Model):
     name = models.CharField(max_length=100)
     slug = models.SlugField()

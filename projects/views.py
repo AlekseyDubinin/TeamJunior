@@ -1,4 +1,5 @@
-from django.shortcuts import render, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 
@@ -35,11 +36,33 @@ class ProjectDetailView(DetailView):
 #     return render(request, 'projects/single-project.html', {'project': projectObj})
 
 
-class ProjectCreateView(CreateView):
-    model = Project
-    template_name = 'projects/project_form.html'
-    form_class = ProjectForm
-    success_url = reverse_lazy('projects')
+
+@login_required(login_url="login")
+def createProject(request):
+    profile = request.user.profile
+    form = ProjectForm()
+
+    if request.method == 'POST':
+        newtags = request.POST.get('newtags').replace(',',  " ").split()
+        form = ProjectForm(request.POST, request.FILES)
+        if form.is_valid():
+            project = form.save(commit=False)
+            project.owner = profile
+            project.save()
+
+            for tag in newtags:
+                tag, created = Tag.objects.get_or_create(name=tag)
+                project.tags.add(tag)
+            return redirect('account')
+
+    context = {'form': form}
+    return render(request, "projects/project_form.html", context)
+
+# class ProjectCreateView(CreateView):
+#     model = Project
+#     template_name = 'projects/project_form.html'
+#     form_class = ProjectForm
+#     success_url = reverse_lazy('projects')
 
     # def form_valid(self, form):
     #     form.save()
@@ -64,7 +87,8 @@ class ProjectUpdateView(UpdateView):
     model = Project
     template_name = 'projects/project_form.html'
     form_class = ProjectForm
-    success_url = reverse_lazy('projects')
+    success_url = reverse_lazy('account')
+
 
     # def form_valid(self, form):
     #     form.save()
@@ -90,8 +114,8 @@ class ProjectUpdateView(UpdateView):
 
 class ProjectDeleteView(DeleteView):
     model = Project
-    template_name = 'projects/delete.html'
-    success_url = reverse_lazy('projects')
+    template_name = 'delete_template.html'
+    success_url = reverse_lazy('account')
 
 # def deleteProject(request, pk):
 #     project = Project.objects.get(id=pk)
