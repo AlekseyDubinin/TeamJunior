@@ -1,40 +1,51 @@
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.views import LoginView
 from django.dispatch.dispatcher import receiver
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.auth.models import User
-from django.urls import conf
+from django.urls import conf, reverse_lazy
 from .models import Profile, Skill
 from .forms import CustomUserCreationForm, ProfileForm, SkillForm
 
 
+class MyLoginView(SuccessMessageMixin, LoginView):
+    form_class = AuthenticationForm
+    template_name = 'users/login_register.html'
 
-def loginUser(request):
-    page = 'login'
+    success_message = 'Такого пользователя нет в системе'
 
-    if request.user.is_authenticated:
-        return redirect('profiles')
+    def get_success_url(self):
+        return reverse_lazy('profiles')
 
-    if request.method == 'POST':
-        username = request.POST['username']
-        password = request.POST['password']
+    def post(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect('profiles')
 
-        try:
-            user = User.objects.get(username=username)
-        except:
-            messages.error(request, 'Такого пользователя нет в системе')
+        if request.method == 'POST':
+            username = request.POST['username']
+            password = request.POST['password']
 
-        user = authenticate(request, username=username, password=password)
+            try:
+                user = User.objects.get(username=username)
+            except:
+                messages.error(request, 'Такого пользователя нет в системе')
 
-        if user is not None:
-            login(request, user)
-            return redirect(request.GET['next'] if 'next' in request.GET else 'account')
+            user = authenticate(request, username=username, password=password)
 
-        else:
-            messages.error(request, 'Неверное имя пользователя или пароль')
+            if user is not None:
+                login(request, user)
+                return redirect(
+                    request.GET['next'] if 'next' in request.GET else 'account')
 
-    return render(request, 'users/login_register.html')
+            else:
+                messages.error(request, 'Неверное имя пользователя или пароль')
+
+        return render(request, 'users/login_register.html')
+
 
 
 def logoutUser(request):
@@ -53,6 +64,7 @@ def registerUser(request):
             user = form.save(commit=False)
             user.username = user.username.lower()
             user.save()
+            Profile.objects.create(user=user)
 
             messages.success(request, 'Аккаунт успешно создан!')
 
