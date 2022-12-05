@@ -17,7 +17,7 @@
 
 
                 {% if request.user.is_authenticated %}
-                <li class="header__menuItem"><a href="#">Сообщения</a></li>
+                <li class="header__menuItem"><a href="{% url 'inbox' %}">Сообщения</a></li>
                 <li class="header__menuItem"><a href="{% url 'account' %}">Мой аккаунт</a></li>
                 <li class="header__menuItem"><a href="{% url 'logout' %}" class="btn btn--sub">Выйти</a></li>
                 {% else %}

@@ -33,21 +33,42 @@ class Project(models.Model):
     image = models.ImageField(null=True, blank=True, default="project_images/default.jpg", upload_to='project_images')
     owner = models.ForeignKey(Profile, null=True, blank=True, on_delete=models.CASCADE)
 
+    @property
+    def reviewers(self):
+        queryset = self.review_set.all().values_list('owner__id', flat=True)
+        return queryset
+
+    @property
+    def getVoteCount(self):
+        reviews = self.review_set.all()
+        upVotes = reviews.filter(value='up').count()
+        totalVotes = reviews.count()
+
+        ratio = (upVotes / totalVotes) * 100
+        self.vote_total = totalVotes
+        self.vote_ratio = ratio
+
+        self.save()
+
     def __str__(self):
         return self.title
 
 
 class Review(models.Model):
     VOTE_TYPE = (
-        ('up', 'Up Vote'),
-        ('down', 'Down Vote'),
+        ('up', 'Положительная оценка'),
+        ('down', 'Отрицательная оценка'),
     )
-
+    owner = models.ForeignKey(Profile, on_delete=models.CASCADE, null=True)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
-    review_text = models.TextField(null=True, blank=True)
+    body = models.TextField(null=True, blank=True)
     value = models.CharField(max_length=200, choices=VOTE_TYPE)
     created = models.DateTimeField(auto_now_add=True)
-    id = models.UUIDField(default=uuid.uuid4, unique=True, primary_key=True, editable=False)
+    id = models.UUIDField(default=uuid.uuid4, unique=True,
+                          primary_key=True, editable=False)
+
+    class Meta:
+        unique_together = [['owner', 'project']]
 
     def __str__(self):
         return self.value

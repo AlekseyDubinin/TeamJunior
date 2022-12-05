@@ -1,9 +1,10 @@
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 
-from .forms import ProjectForm
+from .forms import ProjectForm, ReviewForm
 from .models import Project, Review, Tag
 
 
@@ -19,10 +20,10 @@ class ProjectListView(ListView):
 #     return render(request, 'projects/projects.html', context)
 
 
-class ProjectDetailView(DetailView):
-    model = Project
-    template_name = 'projects/single-project.html'
-    context_object_name = 'project'
+# class ProjectDetailView(DetailView):
+#     model = Project
+#     template_name = 'projects/single-project.html'
+#     context_object_name = 'project'
 
     # def get_context_data(self, **kwargs):
     #     context = super().get_context_data(**kwargs)
@@ -134,4 +135,21 @@ def projects_by_tag(request, tag_slug):
     }
 
     return render(request, "projects/projects.html", context)
+
+
+def project(request, pk):
+   project = Project.objects.get(id=pk)
+   tags = project.tags.all()
+   form = ReviewForm()
+   if request.method == 'POST':
+       form = ReviewForm(request.POST)
+       review = form.save(commit=False)
+       review.project = project
+       review.owner = request.user.profile
+       review.save()
+       project.getVoteCount
+       messages.success(request, 'Ваш отзыв был добавлен!')
+       return redirect('project', pk=project.id)
+   return render(request, 'projects/single-project.html', {'project': project, 'form': form})
+
 
