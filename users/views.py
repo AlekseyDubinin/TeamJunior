@@ -1,6 +1,5 @@
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.views import LoginView
-from django.dispatch.dispatcher import receiver
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
@@ -8,17 +7,17 @@ from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.auth.models import User
 from django.urls import conf, reverse_lazy
+from django.views.generic import CreateView, ListView
+
 from .models import Profile, Skill
 from .forms import CustomUserCreationForm, ProfileForm, SkillForm, MessageForm
 
 class MyLoginView(SuccessMessageMixin, LoginView):
     form_class = AuthenticationForm
     template_name = 'users/login_register.html'
+    success_url = reverse_lazy('profiles')
 
-    success_message = 'Такого пользователя нет в системе'
 
-    def get_success_url(self):
-        return reverse_lazy('profiles')
 
     def post(self, request, *args, **kwargs):
         if request.user.is_authenticated:
@@ -53,34 +52,67 @@ def logoutUser(request):
     return redirect('login')
 
 
-def registerUser(request):
-    page = 'register'
-    form = CustomUserCreationForm()
+class RegisterUser(SuccessMessageMixin, CreateView):
+    form_class = CustomUserCreationForm
+    template_name = 'users/login_register.html'
+    success_url = reverse_lazy('edit-account')
+    messages.success = 'Аккаунт успешно создан!'
+    extra_context = {
+        'page': 'register'
+    }  # чтобы попасть на форму регистрации
 
-    if request.method == 'POST':
-        form = CustomUserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save(commit=False)
-            user.username = user.username.lower()
-            user.save()
-            Profile.objects.create(user=user)
+    def form_valid(self, form):
+        user = form.save()
+        user.username = user.username.lower()
+        user.save()
+        Profile.objects.create(user=user,
+                               name=user.first_name,
+                               email=user.email,
+                               username=user.username)
+        login(self.request, user)
+        return redirect(self.success_url)
 
-            messages.success(request, 'Аккаунт успешно создан!')
 
-            login(request, user)
-            return redirect('edit-account')
 
-        else:
-            messages.success(
-                request, 'Во время регистрации возникла ошибка')
+# def registerUser(request):
+#     page = 'register'
+#     form = CustomUserCreationForm()
+#
+#     if request.method == 'POST':
+#         form = CustomUserCreationForm(request.POST)
+#         if form.is_valid():
+#             user = form.save(commit=False)
+#             user.username = user.username.lower()
+#             user.save()
+#             Profile.objects.create(user=user,
+#                                    name=user.first_name,
+#                                    email=user.email,
+#                                    username=user.username)
+#
+#             messages.success(request, 'Аккаунт успешно создан!')
+#
+#             login(request, user)
+#             return redirect('edit-account')
+#
+#         else:
+#             messages.success(
+#                 request, 'Во время регистрации возникла ошибка')
+#
+#     context = {'page': page, 'form': form}
+#     return render(request, 'users/login_register.html', context)
 
-    context = {'page': page, 'form': form}
-    return render(request, 'users/login_register.html', context)
+class Profiles(ListView):
+    queryset = Profile.objects.all()
+    template_name = "users/profiles.html"
+    extra_context = {
+        'profiles': queryset
+    }
 
-def profiles(request):
-    profiles = Profile.objects.all()
-    context = {'profiles': profiles}
-    return render(request, 'users/profiles.html', context)
+
+# def profiles(request):
+#     profiles = Profile.objects.all()
+#     context = {'profiles': profiles}
+#     return render(request, 'users/profiles.html', context)
 
 
 def userProfile(request, id):
