@@ -44,23 +44,25 @@
 .socials li{
     margin: 0 10px;
 
+
 }
 .socials a{
     text-decoration: none;
     color: #fff;
     padding: 5px;
 
+
 }
 .socials a i{
     font-size: 3rem;
     width: 20px;
-
-
     transition: color .4s ease;
 
 }
 .socials a:hover i{
-    color: #5aa5b9;
+  color: #eb5959;
+  transition: all .6s ease;
+  transform: scale(1.4);
 }
 
 .footer-bottom{
@@ -71,6 +73,7 @@
   padding-bottom: 40px;
   text-align: center;
 }
+
 .footer-bottom p{
   color:#fff;
 float: left;
@@ -98,13 +101,18 @@ float: left;
 .footer-menu ul li{
 padding-right: 10px;
 display: block;
+  /*margin-top: 20px;*/
+  /*transition: all .4s ease;*/
 }
 .footer-menu ul li a{
   color: #cfd2d6;
   text-decoration: none;
+  /*  margin-top: 20px;*/
+  transition: all .6s ease;
 }
 .footer-menu ul li a:hover{
-  color: #5aa5b9;
+  color: #eb5959;
+  transform: scale(1.2);
 }
 
 @media (max-width:500px) {
@@ -187,7 +195,7 @@ img {
 }
 
 .header__nav input[type='checkbox']:checked ~ .header__menu {
-  opacity: 1;
+  opacity: 2;
   pointer-events: all;
 }
 

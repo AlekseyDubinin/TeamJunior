@@ -45,7 +45,7 @@
 
                         </ul>
                         {% if request.user.profile.id != profile.id %}
-                        <a href="#" class="btn btn--sub btn--lg">Написать сообщение </a>
+                        <a href="{% url 'create-message' profile.id %}" class="btn btn--sub btn--lg">Написать сообщение </a>
                         {% endif %}
                     </div>
                 </div>
@@ -92,7 +92,7 @@
                                     <div class="card__body">
                                         <h3 class="project__title">{{ project.title }}</h3>
                                         <p><a class="project__author"
-                                                href="{% url 'user-profile' project.id %}">Разработчик:
+                                                href="{% url 'user-profile' project.owner.id %}">Разработчик:
                                                 {{ project.owner.name }}</a>
                                         </p>
                                         <p class="project--rating">

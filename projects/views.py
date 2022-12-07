@@ -1,8 +1,10 @@
-from django.shortcuts import render, get_object_or_404
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 
-from .forms import ProjectForm
+from .forms import ProjectForm, ReviewForm
 from .models import Project, Review, Tag
 
 
@@ -18,10 +20,10 @@ class ProjectListView(ListView):
 #     return render(request, 'projects/projects.html', context)
 
 
-class ProjectDetailView(DetailView):
-    model = Project
-    template_name = 'projects/single-project.html'
-    context_object_name = 'project'
+# class ProjectDetailView(DetailView):
+#     model = Project
+#     template_name = 'projects/single-project.html'
+#     context_object_name = 'project'
 
     # def get_context_data(self, **kwargs):
     #     context = super().get_context_data(**kwargs)
@@ -35,11 +37,33 @@ class ProjectDetailView(DetailView):
 #     return render(request, 'projects/single-project.html', {'project': projectObj})
 
 
-class ProjectCreateView(CreateView):
-    model = Project
-    template_name = 'projects/project_form.html'
-    form_class = ProjectForm
-    success_url = reverse_lazy('projects')
+
+@login_required(login_url="login")
+def createProject(request):
+    profile = request.user.profile
+    form = ProjectForm()
+
+    if request.method == 'POST':
+        newtags = request.POST.get('newtags').replace(',',  " ").split()
+        form = ProjectForm(request.POST, request.FILES)
+        if form.is_valid():
+            project = form.save(commit=False)
+            project.owner = profile
+            project.save()
+
+            for tag in newtags:
+                tag, created = Tag.objects.get_or_create(name=tag)
+                project.tags.add(tag)
+            return redirect('account')
+
+    context = {'form': form}
+    return render(request, "projects/project_form.html", context)
+
+# class ProjectCreateView(CreateView):
+#     model = Project
+#     template_name = 'projects/project_form.html'
+#     form_class = ProjectForm
+#     success_url = reverse_lazy('projects')
 
     # def form_valid(self, form):
     #     form.save()
@@ -64,7 +88,8 @@ class ProjectUpdateView(UpdateView):
     model = Project
     template_name = 'projects/project_form.html'
     form_class = ProjectForm
-    success_url = reverse_lazy('projects')
+    success_url = reverse_lazy('account')
+
 
     # def form_valid(self, form):
     #     form.save()
@@ -90,8 +115,8 @@ class ProjectUpdateView(UpdateView):
 
 class ProjectDeleteView(DeleteView):
     model = Project
-    template_name = 'projects/delete.html'
-    success_url = reverse_lazy('projects')
+    template_name = 'delete_template.html'
+    success_url = reverse_lazy('account')
 
 # def deleteProject(request, pk):
 #     project = Project.objects.get(id=pk)
@@ -110,4 +135,21 @@ def projects_by_tag(request, tag_slug):
     }
 
     return render(request, "projects/projects.html", context)
+
+
+def project(request, pk):
+   project = Project.objects.get(id=pk)
+   tags = project.tags.all()
+   form = ReviewForm()
+   if request.method == 'POST':
+       form = ReviewForm(request.POST)
+       review = form.save(commit=False)
+       review.project = project
+       review.owner = request.user.profile
+       review.save()
+       project.getVoteCount
+       messages.success(request, 'Ваш отзыв был добавлен!')
+       return redirect('project', pk=project.id)
+   return render(request, 'projects/single-project.html', {'project': project, 'form': form})
+
 
