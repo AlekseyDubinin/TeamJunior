@@ -64,7 +64,7 @@ class RegisterUser(SuccessMessageMixin, CreateView):
     form_class = CustomUserCreationForm
     template_name = 'users/login_register.html'
     success_url = reverse_lazy('edit-account')
-    messages.success = 'Аккаунт успешно создан!'
+    # messages.success = 'Аккаунт успешно создан!'
     extra_context = {
         'page': 'register'
     }  # чтобы попасть на форму регистрации
@@ -237,7 +237,7 @@ def viewMessage(request, pk):
     context = {'message': message}
     return render(request, 'users/message.html', context)
 
-
+@login_required(login_url='login')
 def createMessage(request, pk):
     recipient = Profile.objects.get(id=pk)
     form = MessageForm()
