@@ -6,7 +6,7 @@ from .models import Project, Review
 class ProjectForm(ModelForm):
     class Meta:
         model = Project
-        fields = ['title', 'slug', 'image', 'tags', 'description', 'demo_link', 'source_link']
+        fields = ['title', 'slug', 'image', 'description', 'demo_link', 'source_link', 'tags']
         labels = {
             'title': 'Название проекта',
             'slug': 'Слаг',
