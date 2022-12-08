@@ -90,6 +90,15 @@ class ProjectUpdateView(UpdateView):
     form_class = ProjectForm
     success_url = reverse_lazy('account')
 
+    def post(self, request, *args, **kwargs):
+        super().post(request, *args, **kwargs)
+        newtags = request.POST.get('newtags').replace(',', " ").split()
+        if self.form_valid:
+            for tag in newtags:
+                tag, created = Tag.objects.get_or_create(name=tag)
+                self.object.tags.add(tag)
+            return redirect(self.success_url)
+
     # def form_valid(self, form):
     #     form.save()
     #     return redirect('projects')
