@@ -1,17 +1,37 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.core import paginator
+from .utils import PaG
 
 from .forms import ProjectForm, ReviewForm
 from .models import Project, Review, Tag
 
 
 class ProjectListView(ListView):
+    paginate_by = 3
     model = Project
+
     template_name = 'projects/projects.html'
     context_object_name = 'projects'
+
+    def get_queryset(self):
+        projects = Project.objects.all()
+        search_query = self.request.GET.get('search_query')
+
+        if search_query:
+            projects = projects.distinct().filter(
+                Q(title__icontains=search_query) |
+                Q(description__icontains=search_query) |
+                Q(owner__name__icontains=search_query) |
+                Q(tags__name__icontains=search_query)
+            )
+
+        return projects
+
 
 
 # def projects(request):

@@ -112,19 +112,36 @@ class RegisterUser(SuccessMessageMixin, CreateView):
 #     return render(request, 'users/login_register.html', context)
 
 class Profiles(ListView):
-    queryset = Profile.objects.all()
+    model = Profile
+    # queryset = Profile.objects.all()
     template_name = "users/profiles.html"
-    extra_context = {
-        'profiles': queryset
-    }
+    context_object_name = 'profiles'
+    # extra_context = {
+    #     'profiles': queryset
+    # }
 
-    def get(self, request, *args, **kwargs):
-        search_q = request.GET.get('search_query')
-        if search_q:
-            self.queryset = self.queryset.filter(username__icontains=search_q)
-                                                 # | Q(skills__name__icontains=search_q))
+    def get_queryset(self):
+        projects = Profile.objects.all()
+        search_query = self.request.GET.get('search_query')
 
-        return super().get(request, *args, **kwargs)
+        if search_query:
+            skills = Skill.objects.filter(name__icontains=search_query)
+            projects = projects.distinct().filter(
+                Q(name__icontains=search_query)
+                | Q(username__icontains=search_query)
+                | Q(skills__in=skills)
+            )
+
+        return projects
+
+
+    # def get(self, request, *args, **kwargs):
+    #     search_q = request.GET.get('search_query')
+    #     if search_q:
+    #         self.queryset = self.queryset.filter(username__icontains=search_q)
+    #                                              # | Q(skills__name__icontains=search_q))
+    #
+    #     return super().get(request, *args, **kwargs)
 
 
 
@@ -155,6 +172,7 @@ class UserProfile(DetailView):
 #     context = {'profile': profile, 'main_skills': main_skills,
 #                "extra_skills": extra_skills}
 #     return render(request, 'users/user-profile.html', context)
+
 
 def profiles_by_skill(request, skill_slug):
     skill = get_object_or_404(Skill, slug=skill_slug)
