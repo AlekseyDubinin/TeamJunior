@@ -1,5 +1,6 @@
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.views import LoginView
+from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
@@ -7,7 +8,7 @@ from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.auth.models import User
 from django.urls import conf, reverse_lazy
-from django.views.generic import CreateView, ListView
+from django.views.generic import CreateView, ListView, DetailView
 
 from .models import Profile, Skill
 from .forms import CustomUserCreationForm, ProfileForm, SkillForm, MessageForm
@@ -64,7 +65,7 @@ class RegisterUser(SuccessMessageMixin, CreateView):
     form_class = CustomUserCreationForm
     template_name = 'users/login_register.html'
     success_url = reverse_lazy('edit-account')
-    # messages.success = 'Аккаунт успешно создан!'
+    success_message = 'Аккаунт успешно создан!'
     extra_context = {
         'page': 'register'
     }  # чтобы попасть на форму регистрации
@@ -79,6 +80,7 @@ class RegisterUser(SuccessMessageMixin, CreateView):
                                username=user.username)
         login(self.request, user)
         return redirect(self.success_url)
+
 
 
 
@@ -116,6 +118,15 @@ class Profiles(ListView):
         'profiles': queryset
     }
 
+    def get(self, request, *args, **kwargs):
+        search_q = request.GET.get('search_query')
+        if search_q:
+            self.queryset = self.queryset.filter(username__icontains=search_q)
+                                                 # | Q(skills__name__icontains=search_q))
+
+        return super().get(request, *args, **kwargs)
+
+
 
 # def profiles(request):
 #     profiles = Profile.objects.all()
@@ -123,15 +134,27 @@ class Profiles(ListView):
 #     return render(request, 'users/profiles.html', context)
 
 
-def userProfile(request, id):
-    profile = Profile.objects.get(id=id)
+class UserProfile(DetailView):
+    model = Profile
+    def get(self, request, *args, **kwargs):
+        profile = self.get_object()
+        context = {
+            'profile': profile,
+            'main_skills': profile.skills.all()[:2],
+            "extra_skills": profile.skills.all()[2:]
+        }
+        return render(request, 'users/user-profile.html', context)
 
-    main_skills = profile.skills.all()[:2]
-    extra_skills = profile.skills.all()[2:]
 
-    context = {'profile': profile, 'main_skills': main_skills,
-               "extra_skills": extra_skills}
-    return render(request, 'users/user-profile.html', context)
+# def userProfile(request, id):
+#     profile = Profile.objects.get(id=id)
+#
+#     main_skills = profile.skills.all()[:2]
+#     extra_skills = profile.skills.all()[2:]
+#
+#     context = {'profile': profile, 'main_skills': main_skills,
+#                "extra_skills": extra_skills}
+#     return render(request, 'users/user-profile.html', context)
 
 def profiles_by_skill(request, skill_slug):
     skill = get_object_or_404(Skill, slug=skill_slug)
