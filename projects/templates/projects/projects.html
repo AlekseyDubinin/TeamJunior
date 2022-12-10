@@ -43,8 +43,8 @@
                                 </p>                               
                                 <div class="project__tags">
                                     {% for tag in project.tags.all %}
-                                    <a href="{% url 'tag' tag.slug %}" class="tag tag--pill tag--main">{{tag}}</a>
-
+{#                                    <a href="{% url 'tag' tag.slug %}" class="tag tag--pill tag--main">{{tag}}</a>#}
+                                        <a href="/?search_query={{ tag.slug }}" class="tag tag--pill tag--main">{{tag}}</a>
                                     {% endfor %}
 
                                 </div>

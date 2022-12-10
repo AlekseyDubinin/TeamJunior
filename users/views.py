@@ -1,4 +1,5 @@
 from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView
 from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
@@ -8,7 +9,7 @@ from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.auth.models import User
 from django.urls import conf, reverse_lazy
-from django.views.generic import CreateView, ListView, DetailView
+from django.views.generic import CreateView, ListView, DetailView, UpdateView
 
 from .models import Profile, Skill
 from .forms import CustomUserCreationForm, ProfileForm, SkillForm, MessageForm
@@ -17,42 +18,11 @@ from .forms import CustomUserCreationForm, ProfileForm, SkillForm, MessageForm
 class MyLoginView(SuccessMessageMixin, LoginView):
     form_class = AuthenticationForm
     template_name = 'users/login_register.html'
-    # success_url = reverse_lazy('account')
     success_message = 'Вы успешно вошли в систему'
 
     def form_invalid(self, form):
         messages.error(self.request, 'Неверное имя пользователя или пароль')
         return super().form_invalid(form)
-
-    # def get_success_url(self):
-
-
-
-    # def post(self, request, *args, **kwargs):
-    #     if request.user.is_authenticated:
-    #         return redirect('profiles')
-    #
-    #     if request.method == 'POST':
-    #         username = request.POST['username']
-    #         password = request.POST['password']
-    #
-    #         try:
-    #             user = User.objects.get(username=username)
-    #         except:
-    #             messages.error(request, 'Такого пользователя нет в системе')
-    #
-    #         user = authenticate(request, username=username, password=password)
-    #
-    #         if user is not None:
-    #             login(request, user)
-    #             return redirect(
-    #                 request.GET['next'] if 'next' in request.GET else 'account')
-    #
-    #         else:
-    #             messages.error(request, 'Неверное имя пользователя или пароль')
-    #
-    #     return render(request, 'users/login_register.html')
-
 
 
 def logoutUser(request):
@@ -80,8 +50,6 @@ class RegisterUser(SuccessMessageMixin, CreateView):
                                username=user.username)
         login(self.request, user)
         return redirect(self.success_url)
-
-
 
 
 # def registerUser(request):
@@ -116,9 +84,7 @@ class Profiles(ListView):
     # queryset = Profile.objects.all()
     template_name = "users/profiles.html"
     context_object_name = 'profiles'
-    # extra_context = {
-    #     'profiles': queryset
-    # }
+
 
     def get_queryset(self):
         projects = Profile.objects.all()
@@ -135,30 +101,14 @@ class Profiles(ListView):
         return projects
 
 
-    # def get(self, request, *args, **kwargs):
-    #     search_q = request.GET.get('search_query')
-    #     if search_q:
-    #         self.queryset = self.queryset.filter(username__icontains=search_q)
-    #                                              # | Q(skills__name__icontains=search_q))
-    #
-    #     return super().get(request, *args, **kwargs)
-
-
-
-# def profiles(request):
-#     profiles = Profile.objects.all()
-#     context = {'profiles': profiles}
-#     return render(request, 'users/profiles.html', context)
-
-
 class UserProfile(DetailView):
     model = Profile
     def get(self, request, *args, **kwargs):
         profile = self.get_object()
         context = {
             'profile': profile,
-            'main_skills': profile.skills.all()[:2],
-            "extra_skills": profile.skills.all()[2:]
+            'skills': profile.skills.all(), # Решить вопрос с отображением скиллов
+            # "extra_skills": profile.skills.all()[2:]
         }
         return render(request, 'users/user-profile.html', context)
 
@@ -173,6 +123,8 @@ class UserProfile(DetailView):
 #                "extra_skills": extra_skills}
 #     return render(request, 'users/user-profile.html', context)
 
+"""
+функция фильтрации по скиллам не нужна, поменял ссылку в шаблоне на фильтрацию класса Profiles
 
 def profiles_by_skill(request, skill_slug):
     skill = get_object_or_404(Skill, slug=skill_slug)
@@ -182,51 +134,92 @@ def profiles_by_skill(request, skill_slug):
     }
 
     return render(request, "users/profiles.html", context)
-
-@login_required(login_url='login')
-def userAccount(request):
-    profile = request.user.profile
-
-    skills = profile.skills.all()
-    projects = profile.project_set.all()
-
-    context = {'profile': profile, 'skills': skills, 'projects': projects}
-    return render(request, 'users/account.html', context)
+"""
 
 
-@login_required(login_url='login')
-def editAccount(request):
-    profile = request.user.profile
-    form = ProfileForm(instance=profile)
+class UserAccount(LoginRequiredMixin, DetailView):
+    login_url = 'login'
+    template_name = 'users/account.html'
 
-    if request.method == 'POST':
-        form = ProfileForm(request.POST, request.FILES, instance=profile)
-        if form.is_valid():
-            form.save()
+    def get(self, request, *args, **kwargs):
+        profile = self.request.user.profile
+        skills = profile.skills.all()
+        projects = profile.project_set.all()
 
-            return redirect('account')
+        context = {'profile': profile, 'skills': skills, 'projects': projects}
+        return render(request, self.template_name, context)
 
-    context = {'form': form}
-    return render(request, 'users/profile_form.html', context)
+# @login_required(login_url='login')
+# def userAccount(request):
+#     profile = request.user.profile
+#
+#     skills = profile.skills.all()
+#     projects = profile.project_set.all()
+#
+#     context = {'profile': profile, 'skills': skills, 'projects': projects}
+#     return render(request, 'users/account.html', context)
+
+class EditAccount(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+    login_url = 'login'
+    form_class = ProfileForm
+    template_name = 'users/profile_form.html'
+    success_url = reverse_lazy('account')
+    success_message = 'Аккаунт успешно обновлен'
+    def get_object(self, queryset=None):
+        return self.request.user.profile
 
 
-@login_required(login_url='login')
-def createSkill(request):
-    profile = request.user.profile
-    form = SkillForm()
 
-    if request.method == 'POST':
-        form = SkillForm(request.POST)
-        if form.is_valid():
-            skill = form.save(commit=False)
-            skill_slug = request.POST.get('slug')
-            skill_description = request.POST.get('description')
-            profile.skills.get_or_create(name=skill, slug=skill_slug, description=skill_description)
-            messages.success(request, 'Навык добавлен')
-            return redirect('account')
+# @login_required(login_url='login')
+# def editAccount(request):
+#     profile = request.user.profile
+#     form = ProfileForm(instance=profile)
+#
+#     if request.method == 'POST':
+#         form = ProfileForm(request.POST, request.FILES, instance=profile)
+#         if form.is_valid():
+#             form.save()
+#
+#             return redirect('account')
+#
+#     context = {'form': form}
+#     return render(request, 'users/profile_form.html', context)
 
-    context = {'form': form}
-    return render(request, 'users/skill_form.html', context)
+
+class CreateSkill(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+    login_url = 'login'
+    form_class = SkillForm
+    template_name = 'users/skill_form.html'
+    success_message = 'Навык добавлен'
+    success_url = reverse_lazy('account')
+
+    def get_object(self, queryset=None):
+        return self.request.user.profile
+
+    def form_valid(self, form):
+        skill = form.save()
+        skill_slug = form.cleaned_data['slug']
+        skill_description = form.cleaned_data['description']
+        self.request.user.profile.skills.get_or_create(name=skill, slug=skill_slug, description=skill_description)
+        return redirect('account')
+
+# @login_required(login_url='login')
+# def createSkill(request):
+#     profile = request.user.profile
+#     form = SkillForm()
+#
+#     if request.method == 'POST':
+#         form = SkillForm(request.POST)
+#         if form.is_valid():
+#             skill = form.save(commit=False)
+#             skill_slug = request.POST.get('slug')
+#             skill_description = request.POST.get('description')
+#             profile.skills.get_or_create(name=skill, slug=skill_slug, description=skill_description)
+#             messages.success(request, 'Навык добавлен')
+#             return redirect('account')
+#
+#     context = {'form': form}
+#     return render(request, 'users/skill_form.html', context)
 
 
 @login_required(login_url='login')

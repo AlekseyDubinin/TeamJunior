@@ -44,7 +44,7 @@
                             <div class="dev__skills">
 
                                 {% for skill in profile.skills.all|slice:"3" %}
-                                <a href="{% url 'skill' skill.slug %}" class="tag tag--pill tag--main">{{ skill }}</a>
+                                <a href="/?search_query={{ skill.slug }}" class="tag tag--pill tag--main">{{ skill }}</a>
                                 {% endfor %}
 
                             </div>

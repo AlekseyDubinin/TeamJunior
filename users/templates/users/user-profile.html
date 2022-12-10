@@ -59,25 +59,28 @@
                     <h3 class="devInfo__title">Стек и основные навыки</h3>
                     <div class="devInfo__skills">
 
-                        {% for skill in main_skills %}
-                        <div class="devSkill">
-                            <h4 class="devSkill__title">{{ skill.name }}</h4>
-                            <p class="devSkill__info">{{ skill.description }}</p>
-                        </div>
+                        {% for skill in skills %}
+{#                        <div class="devSkill">#}
+                            <span class="tag tag--pill tag--sub tag--lg">
+                                <small>{{ skill }}</small>
+                            </span>
+{#                            <h4 class="devSkill__title">{{ skill.name }}</h4>#}
+{#                            <p class="devSkill__info">{{ skill.description }}</p>#}
+{#                        </div>#}
                         {% endfor %}
 
 
 
-                        <h3 class="devInfo__subtitle">Дополнительные навыки</h3>
-                        <div class="devInfo__otherSkills">
-
-                            {% for skill in extra_skills %}
-                            <span class="tag tag--pill tag--sub tag--lg">
-                                <small>{{ skill }}</small>
-                            </span>
-                            {% endfor %}
-
-                        </div>
+{#                        <h3 class="devInfo__subtitle">Дополнительные навыки</h3>#}
+{#                        <div class="devInfo__otherSkills">#}
+{##}
+{#                            {% for skill in extra_skills %}#}
+{#                            <span class="tag tag--pill tag--sub tag--lg">#}
+{#                                <small>{{ skill }}</small>#}
+{#                            </span>#}
+{#                            {% endfor %}#}
+{##}
+{#                        </div>#}
                     </div>
                 </div>
                 <div class="devInfo">

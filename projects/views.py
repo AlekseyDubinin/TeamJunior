@@ -154,6 +154,8 @@ class ProjectDeleteView(DeleteView):
 #     context = {'object': project}
 #     return render(request, 'projects/delete.html', context)
 
+"""
+Так же как и с фильтрацией профилей по скиллам заменил ссылку в шаблоне на фильтрацию проектов
 
 def projects_by_tag(request, tag_slug):
     tag = get_object_or_404(Tag, slug=tag_slug)
@@ -163,6 +165,8 @@ def projects_by_tag(request, tag_slug):
     }
 
     return render(request, "projects/projects.html", context)
+"""
+
 
 
 def project(request, pk):
