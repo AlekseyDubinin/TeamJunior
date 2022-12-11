@@ -1,6 +1,6 @@
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.views import LoginView
+from django.contrib.auth.views import LoginView, LogoutView
 from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
@@ -9,7 +9,8 @@ from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.auth.models import User
 from django.urls import conf, reverse_lazy
-from django.views.generic import CreateView, ListView, DetailView, UpdateView
+from django.views.generic import CreateView, ListView, DetailView, UpdateView, \
+    DeleteView
 
 from .models import Profile, Skill
 from .forms import CustomUserCreationForm, ProfileForm, SkillForm, MessageForm
@@ -25,13 +26,18 @@ class MyLoginView(SuccessMessageMixin, LoginView):
         return super().form_invalid(form)
 
 
-def logoutUser(request):
-    logout(request)
-    messages.info(request, 'Вы вышли из учетной записи')
-    return redirect('login')
+class MyLogoutView(SuccessMessageMixin, LogoutView):
+    # LOGOUT_REDIRECT_URL = 'login' в настройках
+    success_message = 'Вы вышли из учетной записи' # ???  не выводит
+    
+
+# def logoutUser(request):
+#     logout(request)
+#     messages.info(request, 'Вы вышли из учетной записи')
+#     return redirect('login')
 
 
-class RegisterUser(SuccessMessageMixin, CreateView):
+class RegisterUserView(SuccessMessageMixin, CreateView):
     form_class = CustomUserCreationForm
     template_name = 'users/login_register.html'
     success_url = reverse_lazy('edit-account')
@@ -41,6 +47,7 @@ class RegisterUser(SuccessMessageMixin, CreateView):
     }  # чтобы попасть на форму регистрации
 
     def form_valid(self, form):
+        super().form_valid(form)
         user = form.save()
         user.username = user.username.lower()
         user.save()
@@ -79,7 +86,7 @@ class RegisterUser(SuccessMessageMixin, CreateView):
 #     context = {'page': page, 'form': form}
 #     return render(request, 'users/login_register.html', context)
 
-class Profiles(ListView):
+class ProfilesListView(ListView):
     model = Profile
     # queryset = Profile.objects.all()
     template_name = "users/profiles.html"
@@ -101,7 +108,7 @@ class Profiles(ListView):
         return projects
 
 
-class UserProfile(DetailView):
+class UserProfileView(DetailView):
     model = Profile
     def get(self, request, *args, **kwargs):
         profile = self.get_object()
@@ -137,7 +144,7 @@ def profiles_by_skill(request, skill_slug):
 """
 
 
-class UserAccount(LoginRequiredMixin, DetailView):
+class UserAccountView(LoginRequiredMixin, DetailView):
     login_url = 'login'
     template_name = 'users/account.html'
 
@@ -159,7 +166,7 @@ class UserAccount(LoginRequiredMixin, DetailView):
 #     context = {'profile': profile, 'skills': skills, 'projects': projects}
 #     return render(request, 'users/account.html', context)
 
-class EditAccount(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+class AccountUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     login_url = 'login'
     form_class = ProfileForm
     template_name = 'users/profile_form.html'
@@ -186,7 +193,7 @@ class EditAccount(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
 #     return render(request, 'users/profile_form.html', context)
 
 
-class CreateSkill(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+class SkillCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     login_url = 'login'
     form_class = SkillForm
     template_name = 'users/skill_form.html'
@@ -197,6 +204,7 @@ class CreateSkill(LoginRequiredMixin, SuccessMessageMixin, CreateView):
         return self.request.user.profile
 
     def form_valid(self, form):
+        super().form_valid(form)
         skill = form.save()
         skill_slug = form.cleaned_data['slug']
         skill_description = form.cleaned_data['description']
@@ -222,34 +230,61 @@ class CreateSkill(LoginRequiredMixin, SuccessMessageMixin, CreateView):
 #     return render(request, 'users/skill_form.html', context)
 
 
-@login_required(login_url='login')
-def updateSkill(request, skill_slug):
-    profile = request.user.profile
-    skill = profile.skills.get(slug=skill_slug)
-    form = SkillForm(instance=skill)
+class SkillUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+    login_url = 'login'
+    model = Skill
+    form_class = SkillForm
+    template_name = 'users/skill_form.html'
+    success_message = 'Навык успешно обновлен!'
+    success_url = reverse_lazy('account')
 
-    if request.method == 'POST':
-        form = SkillForm(request.POST, instance=skill)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Навык успешно обновлен')
-            return redirect('account')
-
-    context = {'form': form}
-    return render(request, 'users/skill_form.html', context)
+    def get_object(self, queryset=None):
+        profile = self.request.user.profile
+        skill = profile.skills.get(slug=self.kwargs['skill_slug'])
+        return skill
 
 
-@login_required(login_url='login')
-def deleteSkill(request, skill_slug):
-    profile = request.user.profile
-    skill = profile.skills.get(slug=skill_slug)
-    if request.method == 'POST':
-        skill.delete()
-        messages.success(request, 'Навык успешно удален')
-        return redirect('account')
+# @login_required(login_url='login')
+# def updateSkill(request, skill_slug):
+#     profile = request.user.profile
+#     skill = profile.skills.get(slug=skill_slug)
+#     form = SkillForm(instance=skill)
+#
+#     if request.method == 'POST':
+#         form = SkillForm(request.POST, instance=skill)
+#         if form.is_valid():
+#             form.save()
+#             messages.success(request, 'Навык успешно обновлен')
+#             return redirect('account')
+#
+#     context = {'form': form}
+#     return render(request, 'users/skill_form.html', context)
 
-    context = {'object': skill}
-    return render(request, 'delete_template.html', context)
+class SkillDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
+    login_url = 'login'
+    model = Skill
+    template_name = 'delete_template.html'
+    success_message = 'Навык успешно удален!'
+    success_url = reverse_lazy('account')
+
+    def get_object(self, queryset=None):
+        profile = self.request.user.profile
+        skill = profile.skills.get(slug=self.kwargs['skill_slug'])
+        return skill
+
+
+
+# @login_required(login_url='login')
+# def deleteSkill(request, skill_slug):
+#     profile = request.user.profile
+#     skill = profile.skills.get(slug=skill_slug)
+#     if request.method == 'POST':
+#         skill.delete()
+#         messages.success(request, 'Навык успешно удален')
+#         return redirect('account')
+#
+#     context = {'object': skill}
+#     return render(request, 'delete_template.html', context)
 
 
 @login_required(login_url='login')

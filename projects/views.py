@@ -1,5 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models import Q
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
@@ -55,6 +57,8 @@ class ProjectListView(ListView):
 # def project(request, pk):
 #     projectObj = Project.objects.get(id=pk)
 #     return render(request, 'projects/single-project.html', {'project': projectObj})
+
+
 
 
 @login_required(login_url="login")
