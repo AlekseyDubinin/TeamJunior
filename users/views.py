@@ -94,7 +94,7 @@ class ProfilesListView(ListView):
 
 
     def get_queryset(self):
-        projects = Profile.objects.all()
+        projects = Profile.objects.filter(test_passed=True).all()
         search_query = self.request.GET.get('search_query')
 
         if search_query:

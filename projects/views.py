@@ -6,8 +6,7 @@ from django.db.models import Q
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from django.core import paginator
-from .utils import PaG
+
 
 from .forms import ProjectForm, ReviewForm
 from .models import Project, Review, Tag
@@ -21,7 +20,7 @@ class ProjectListView(ListView):
     context_object_name = 'projects'
 
     def get_queryset(self):
-        projects = Project.objects.all()
+        projects = Project.objects.filter(owner__test_passed=True).all()
         search_query = self.request.GET.get('search_query')
 
         if search_query:
