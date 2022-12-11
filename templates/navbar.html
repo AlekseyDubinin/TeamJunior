@@ -11,7 +11,7 @@
                 <div class="toggle-menu__lines"></div>
             </label>
             <ul class="header__menu">
-                <li class="header__menuItem"><a href="{% url 'profiles' %}">Разработчики</a></li>
+                <li class="header__menuItem "><a href="{% url 'profiles' %}">Разработчики</a></li>
                 <li class="header__menuItem"><a href="{% url 'projects' %}">Проекты</a></li>
 
 
@@ -20,7 +20,10 @@
                 <li class="header__menuItem"><a href="{% url 'inbox' %}">Сообщения</a></li>
                 <li class="header__menuItem"><a href="{% url 'account' %}">Мой аккаунт</a></li>
                     <li class="header__menuItem"><a href="{% url 'logout' %}" class="btn btn--sub">Выйти</a>
-                    <span class="btn"><i class="fa fa-cog fa-spin fa-lg fa-fw"></i>{{ user.username }}</span>
+                        <span class="team_name"><i class="bi bi-alipay m-sm"></i>{{ user.username }}</span>
+{#                        <span class="team_name">{{ user.username }}</span>#}
+
+
                         {% if not request.user.profile.test_passed %}
                     <a href="" class="btn btn--sub">Тестирование!!!!</a></li>
                         {% endif %}
