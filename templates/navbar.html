@@ -19,13 +19,16 @@
                 {% if request.user.is_authenticated %}
                 <li class="header__menuItem"><a href="{% url 'inbox' %}">Сообщения</a></li>
                 <li class="header__menuItem"><a href="{% url 'account' %}">Мой аккаунт</a></li>
-                    <li class="header__menuItem"><a href="{% url 'logout' %}" class="btn btn--sub">Выйти</a>
-                        <span class="team_name"><i class="bi bi-alipay m-sm"></i>{{ user.username }}</span>
-{#                        <span class="team_name">{{ user.username }}</span>#}
-
+                <li class="header__menuItem"><a href="{% url 'logout' %}" class="btn btn--sub">Выйти</a></li>
+                <li class="header__menuItem">
+                    <div class="team_name_outer">
+                        <img class="avatar avatar--ssm" src="{{ user.profile.image.url }}">
+                        <span class="team_name">{{ user.username }}</span>
+                    </div>
+                </li>
 
                         {% if not request.user.profile.test_passed %}
-                    <a href="" class="btn btn--sub">Тестирование!!!!</a></li>
+                <li class="header__menuItem"><a href="" class="btn btn--sub">Тестирование!!!!</a></li>
                         {% endif %}
 
                 {% else %}

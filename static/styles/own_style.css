@@ -1,3 +1,13 @@
-.team_name {
-    font-size: 18px;
+.team_name_outer {
+    display: flex;
+    align-items: center;
 }
+
+.team_name {
+    font-size: 14px;
+    font-weight: 300;
+    color: var(--color-light);
+    font-family: var(--font-base);
+    margin-left: 5px;
+}
+
