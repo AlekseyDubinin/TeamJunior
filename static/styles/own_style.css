@@ -11,3 +11,15 @@
     margin-left: 5px;
 }
 
+.team_carousel {
+    padding: 0;
+}
+
+.team_carousel .carousel-item {
+    display: flex;
+    height: 20vh;
+}
+
+.team_carousel .carousel-item img {
+    object-fit: cover;
+}
